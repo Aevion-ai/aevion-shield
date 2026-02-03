@@ -1,0 +1,17 @@
+{
+  "anchor_id": "prior-art-1770098518",
+  "type": "aevion-prior-art-anchor",
+  "timestamp": "2026-02-03T06:01:58.345984+00:00",
+  "proof_hash": "0c230687dcd9298f9de45719e95833cb2876ca7d76f9201497ced22489ed60d2",
+  "git_sha": "f514ffb",
+  "git_tag": "v1.0.0",
+  "release": "Aevion Shield v1.0.0",
+  "polygon_tx_hash": "2724acd7c675bd46cad2c1ad4f8e70087239583475eef7dda9b57c6d6ceea3c6",
+  "polygon_explorer": "https://polygonscan.com/tx/2724acd7c675bd46cad2c1ad4f8e70087239583475eef7dda9b57c6d6ceea3c6",
+  "polygon_chain_id": 137,
+  "polygon_network": "mainnet",
+  "anchor_wallet": "0xEa7016Ce882cB67dE003C66c64EAf4Dd7B7C2E87",
+  "patent_reference": "US 63/896,282",
+  "company": "Aevion LLC",
+  "cage_code": "15NV7"
+}

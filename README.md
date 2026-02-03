@@ -1,6 +1,6 @@
 # Aevion Shield: First Formally Verified Byzantine AI Consensus
 
-[![arXiv](https://img.shields.io/badge/arXiv-2402.XXXXX-b31b1b.svg)](https://arxiv.org/abs/2402.XXXXX)
+[![DOI](https://img.shields.io/badge/DOI/10.5281/zenodo.18464930-b31b1b.svg)](https://doi.org/10.5281/zenodo.18464930)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Lean 4](https://img.shields.io/badge/Lean%204-63%20theorems-green.svg)](formal-proofs/lean4/)
 [![Verus](https://img.shields.io/badge/Verus-verified-green.svg)](formal-proofs/verus/)
@@ -150,7 +150,7 @@ Aevion implements Kahneman's dual process theory at the system level:
 
 ```bash
 # Clone repository
-git clone https://github.com/aevion-llc/aevion-shield.git
+git clone https://github.com/Aevion-ai/aevion-shield.git
 cd aevion-shield
 
 # Verify Lean proofs (requires Lean 4 + Mathlib)
@@ -218,7 +218,7 @@ print(f"Proof chain: {result.proof_id}")
   title={Dual Process Byzantine Consensus: Formal Verification of AI Safety
          Through Lean, Verus, and Prusti},
   author={Leishman, Scott},
-  journal={arXiv preprint arXiv:2402.XXXXX},
+  journal={DOI preprint DOI:2402.XXXXX},
   year={2026},
   note={First formally verified Byzantine AI consensus system}
 }
