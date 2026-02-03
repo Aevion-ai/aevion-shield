@@ -1,0 +1,31 @@
+{
+  "title": "Aevion Shield: First Formally Verified Byzantine AI Consensus",
+  "description": "The first Byzantine fault-tolerant AI consensus system with machine-checked formal verification across three theorem provers: Lean 4 (63 theorems), Verus (Rust), and Prusti (contracts). Empirical validation on 500-sample GSM8K benchmark demonstrates 92.8% baseline accuracy degrading to only 83.0% under 33% Byzantine attack (p < 0.001). Constitutional halt mechanism triggers when agreement falls below 67%, achieving 57.8% halt rate under majority Byzantine conditions. This work establishes prior art for Byzantine AI consensus verification as of February 2026.",
+  "upload_type": "software",
+  "creators": [
+    {
+      "name": "Leishman, Scott",
+      "affiliation": "Aevion LLC",
+      "orcid": ""
+    }
+  ],
+  "keywords": [
+    "Byzantine fault tolerance",
+    "formal verification",
+    "AI safety",
+    "consensus systems",
+    "Lean 4",
+    "theorem proving",
+    "LLM verification"
+  ],
+  "license": "Apache-2.0",
+  "access_right": "open",
+  "related_identifiers": [
+    {
+      "identifier": "https://github.com/aevion-llc/aevion-shield",
+      "relation": "isSupplementTo",
+      "scheme": "url"
+    }
+  ],
+  "notes": "Prior art disclosure establishing Byzantine AI consensus architecture as of February 2026. Patent: US 63/896,282 (Filed October 9, 2025). CAGE Code: 15NV7."
+}

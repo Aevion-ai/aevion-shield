@@ -1,0 +1,38 @@
+{
+  "proof_hash": "0c230687dcd9298f9de45719e95833cb2876ca7d76f9201497ced22489ed60d2",
+  "proof_document": {
+    "version": "1.0.0",
+    "type": "aevion-prior-art-proof",
+    "timestamp": "2026-02-03T05:49:25.320101+00:00",
+    "release": {
+      "name": "Aevion Shield v1.0.0",
+      "description": "First formally verified Byzantine AI consensus",
+      "git_sha": "71d88af5caf75124e4b0e48b11be6457b9c9323a",
+      "git_timestamp": "2026-02-02 23:48:20 -0600",
+      "tag": "v1.0.0"
+    },
+    "formal_verification": {
+      "lean4_theorems": 63,
+      "verus_proofs": [
+        "variance_halt",
+        "trust_bounds",
+        "byzantine_consensus"
+      ],
+      "prusti_contracts": [
+        "ed25519_non_malleable"
+      ]
+    },
+    "benchmark": {
+      "dataset": "GSM8K",
+      "samples": 500,
+      "baseline_accuracy": 0.928,
+      "byzantine_33pct_accuracy": 0.83,
+      "resilience_factor": 0.894,
+      "p_value": "<0.001"
+    },
+    "patent_reference": "US 63/896,282",
+    "company": "Aevion LLC",
+    "cage_code": "15NV7"
+  },
+  "blockchain_status": "ready_for_anchor"
+}
