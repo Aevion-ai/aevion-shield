@@ -1,6 +1,6 @@
 # Aevion Shield - Cloudflare Workers Fleet
 
-Serverless verification infrastructure running on Cloudflare's edge network. Nine specialized Workers form a distributed proof pipeline with collective intelligence, cross-domain regulation tracking, and cryptographically verifiable AI inference.
+Serverless verification infrastructure running on Cloudflare's edge network. Fourteen specialized Workers form a distributed proof pipeline with collective intelligence, cross-domain regulation tracking, CEO operations automation, and cryptographically verifiable AI inference.
 
 **Patent**: US 63/896,282 - Constitutional Halt + Human Oversight
 
@@ -336,6 +336,99 @@ These workers implement the following patent claims from US 63/896,282:
 | 85+ | Multi-vertical collective intelligence | sentient-collective |
 | 85+ | Cross-domain regulatory symbiosis | regulation-tracker |
 | 85+ | Quantum Shard Learning (anonymized knowledge sharing) | sentient-collective, regulation-tracker |
+| 85+ | Automated compliance artifact generation | compliance-reporter |
+| 85+ | Self-service verification demo | demo-sandbox |
+| 85+ | Fleet health monitoring and alerting | fleet-health-monitor, notification-hub |
+| 85+ | x402 payment metering and revenue tracking | revenue-gateway |
+
+---
+
+## CEO Operations Layer (Workers 10-14)
+
+These workers automate business operations for a solo non-coding CEO. No staff required.
+
+### 10. fleet-health-monitor (`fleet-health-monitor.js`)
+**Type**: Scheduled (Cron) Worker + KV + D1
+
+Monitors the entire 14-worker fleet every 15 minutes. One endpoint gives you fleet health, uptime stats, cost estimates, and active alerts.
+
+| Feature | Detail |
+|---------|--------|
+| Cron schedule | `*/15 * * * *` (every 15 minutes) |
+| Fleet topology | All 14 workers + Pi Sheriff |
+| Uptime tracking | 24h, 7d, 30d windows |
+| Cost estimator | Tracks against free-tier limits |
+| Alert system | 3 consecutive failures = P0 alert |
+
+**Endpoints**: `/health`, `/v1/fleet`, `/v1/dashboard`, `/v1/uptime`, `/v1/costs`, `/v1/alerts`
+
+---
+
+### 11. revenue-gateway (`revenue-gateway.js`)
+**Type**: Stateless Worker + KV + D1
+
+API key management, usage metering, and billing infrastructure. Four pricing tiers with x402 payment support and Stripe-ready billing events.
+
+| Feature | Detail |
+|---------|--------|
+| Tiers | Free (100/day), Pro (500/day, $99), Enterprise (50K/day, $499), Government (100K/day, custom) |
+| API keys | `av_` prefixed, KV-backed |
+| Metering | Daily/monthly counters with overage tracking |
+| x402 | HTTP 402 Payment Required with `X-Payment` headers |
+| Revenue metrics | MRR, ARR, tier breakdown, growth rate |
+
+**Endpoints**: `/health`, `/v1/pricing`, `/v1/keys/create`, `/v1/keys/validate`, `/v1/usage`, `/v1/revenue`, `/v1/verify`
+
+---
+
+### 12. compliance-reporter (`compliance-reporter.js`)
+**Type**: Stateless Worker + D1
+
+Auto-generates compliance artifacts for NIST AI RMF, EU AI Act, CMMC Level 2, and ISO 42001. One endpoint produces all compliance docs needed for proposals and audits.
+
+| Feature | Detail |
+|---------|--------|
+| Frameworks | NIST AI RMF, EU AI Act, CMMC 2.0, ISO/IEC 42001 |
+| Scoring | Per-framework and overall compliance percentage |
+| Reports | JSON and Markdown formats |
+| Proposal artifacts | Technical volume, past performance, cost volume |
+| Gap analysis | Identifies remaining compliance gaps |
+
+**Endpoints**: `/health`, `/v1/frameworks`, `/v1/summary`, `/v1/report/{framework}`, `/v1/report/{framework}/markdown`, `/v1/full-report`, `/v1/artifact/{type}`, `/v1/gaps`
+
+---
+
+### 13. demo-sandbox (`demo-sandbox.js`)
+**Type**: Stateless Worker + KV + D1
+
+Self-service prospect demo. Four interactive scenarios let prospects try verification without an account or sales call. Includes lead capture and demo analytics.
+
+| Feature | Detail |
+|---------|--------|
+| Scenarios | VetProof, Legal, Finance, Constitutional Halt |
+| Rate limit | 10 demos/day per IP (anonymous) |
+| Lead capture | Optional email for follow-up |
+| Analytics | Scenario popularity, conversion rate |
+| Simulated pipeline | Realistic 5-step evidence chain with proof hashes |
+
+**Endpoints**: `/health`, `/v1/scenarios`, `/v1/demo/{scenario}`, `/v1/pricing`, `/v1/analytics`
+
+---
+
+### 14. notification-hub (`notification-hub.js`)
+**Type**: Scheduled (Cron) Worker + KV + D1
+
+Multi-channel alert system. Discord, email (MailChannels), and generic webhook support with priority-based routing. Never miss a critical event.
+
+| Feature | Detail |
+|---------|--------|
+| Channels | Discord webhook, email (MailChannels), generic webhook |
+| Priority routing | P0: all channels, P1: discord+email, P2-P3: discord |
+| Pending alerts | Reads from KV (set by fleet-health-monitor) |
+| Daily digest | 8am CT summary of demos, alerts, API calls |
+| Cron | `*/5 * * * *` (alert check), `0 14 * * *` (daily digest) |
+
+**Endpoints**: `/health`, `/v1/alert`, `/v1/process-pending`, `/v1/history`, `/v1/test`, `/v1/channels`
 
 ---
 
