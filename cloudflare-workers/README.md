@@ -1,0 +1,303 @@
+# Aevion Shield - Cloudflare Workers Fleet
+
+Serverless verification infrastructure running on Cloudflare's edge network. Seven specialized Workers form a distributed proof pipeline for cryptographically verifiable AI inference.
+
+**Patent**: US 63/896,282 - Constitutional Halt + Human Oversight
+
+---
+
+## Architecture Overview
+
+```
+                     Internet
+                        |
+          +-------------+-------------+
+          |             |             |
+   edge-sheriff    ai-sheriff   sentient-core
+   (Ed25519 +      (Workers AI   (Workers AI
+    Merkle)        inference)     sample)
+          |             |
+          +------+------+
+                 |
+          +------+------+
+          |             |
+     proof-agent   vetproof-hitl
+     (Durable Obj   (Workflow +
+      + x402 pay)    waitForEvent)
+          |             |
+          +------+------+
+                 |
+          +------+------+
+          |             |
+   vetproof-workflow  vetproof-consensus
+   (6-step durable    (BFT Durable Obj
+    pipeline)          + Queue consumer)
+```
+
+---
+
+## Worker Descriptions
+
+### 1. edge-sheriff (`edge-sheriff.js`)
+**Type**: Stateless Worker with KV + D1
+
+Cryptographic verification at the edge. Validates Ed25519 signatures, verifies Merkle proof inclusion paths, and performs fast KV cache lookups before falling back to Workers AI inference.
+
+| Feature | Detail |
+|---------|--------|
+| Signature verification | Ed25519 via WebCrypto `verify()` |
+| Merkle proofs | Binary hash-path verification |
+| Coherence scoring | Workers AI similarity check |
+| Caching | KV namespace for proof lookups |
+| Audit | D1 insert on every verification |
+
+**Endpoints**: `/health`, `/v1/verify`, `/v1/quick-verify`, `/v1/proof/:id`
+
+**Bindings**: `AI`, `VERIFICATION_CACHE` (KV), `AUDIT_DB` (D1)
+
+---
+
+### 2. ai-sheriff (`ai-sheriff.js`)
+**Type**: Stateless Worker with Workers AI
+
+AI-powered verification using Cloudflare's inference API. Supports single and batch verification, embedding generation, and cosine similarity scoring across multiple model tiers.
+
+| Feature | Detail |
+|---------|--------|
+| Models | `@cf/meta/llama-3.1-8b-instruct` (fast), `@cf/qwen/qwen1.5-14b-chat-awq` (quality) |
+| Embeddings | `@cf/baai/bge-base-en-v1.5` (768-dim) |
+| Similarity | Cosine similarity between claim and evidence vectors |
+| Batch mode | Up to 10 concurrent verifications |
+
+**Endpoints**: `/health`, `/v1/verify`, `/v1/batch-verify`, `/v1/embeddings`
+
+**Bindings**: `AI`, `VERIFICATION_CACHE` (KV)
+
+---
+
+### 3. proof-agent (`proof-agent.js`)
+**Type**: Durable Object with SQLite + Alarms
+
+The monetization and agent layer. Each `ProofAgent` is a stateful Durable Object with embedded SQLite for session persistence, WebSocket support for real-time state sync, scheduled tasks via the Alarm API, and x402 payment gating for premium verification tiers.
+
+| Feature | Detail |
+|---------|--------|
+| State | SQLite (tasks, messages, verification results) |
+| WebSocket | Real-time bidirectional state sync |
+| x402 payment | HTTP 402 + `X-Payment` header for micropayments |
+| Alarms | Scheduled background tasks (cleanup, retry) |
+| Shield Consensus | Multi-model voting with variance halt |
+| Proof signing | SHA-256 hash chain via WebCrypto |
+
+**Endpoints**: `/health`, `/v1/agent/create`, `/v1/agent/:id/verify`, `/v1/agent/:id/ws`, `/v1/agent/:id/status`
+
+**Bindings**: `PROOF_AGENT` (Durable Object), `AI`, `VERIFICATION_CACHE` (KV), `AUDIT_DB` (D1), `PROOF_STORAGE` (R2)
+
+---
+
+### 4. vetproof-hitl (`vetproof-hitl.js`)
+**Type**: Cloudflare Workflow (WorkflowEntrypoint)
+
+Human-in-the-loop approval gates for high-stakes claims using Cloudflare's durable Workflow API. When AI pre-screening detects low confidence or high risk, the workflow pauses via `step.waitForEvent()` until a human reviewer approves or rejects through the HTTP API.
+
+| Feature | Detail |
+|---------|--------|
+| AI pre-screening | Workers AI claim analysis (completeness, risk flags) |
+| Constitutional Halt | Confidence < 0.67 triggers mandatory human review |
+| HITL gate | `waitForEvent()` pauses workflow up to 7 days |
+| Auto-approve | Low-risk claims bypass human review |
+| Proof signing | SHA-256 hash + R2 archival on approval |
+| Audit trail | D1 insert at screening + decision stages |
+
+**Pipeline**: Submit -> AI Screen -> Risk Assessment -> Audit -> HITL Gate -> Sign Proof -> Final Audit
+
+**Endpoints**: `/health`, `/v1/claims/submit`, `/v1/claims/status/:id`, `/v1/claims/approve`, `/v1/claims/reject`, `/v1/claims/pending`, `/v1/proof/:claim_id`
+
+**Bindings**: `HITL_WORKFLOW` (Workflow), `AI`, `VERIFICATION_CACHE` (KV), `AUDIT_DB` (D1), `PROOF_STORAGE` (R2)
+
+---
+
+### 5. vetproof-workflow (`vetproof-workflow.js`)
+**Type**: Cloudflare Workflow (WorkflowEntrypoint)
+
+Six-step durable verification pipeline with automatic retries and exponential backoff. Each step is independently recoverable.
+
+| Step | Name | Description |
+|------|------|-------------|
+| 1 | SANITIZE | PII detection and redaction (regex-based) |
+| 2 | EMBED | Generate 768-dim embeddings via `bge-base-en-v1.5` |
+| 3 | SEARCH | Vectorize semantic search for relevant evidence |
+| 4 | VERIFY | Multi-model BFT consensus verification |
+| 5 | DETECT | Hallucination and consistency detection |
+| 6 | SIGN | SHA-256 proof hash + R2 archival + D1 audit |
+
+**Constitutional Halt**: If standard deviation of model agreement > 0.25, the claim is flagged for review rather than auto-approved.
+
+**Endpoints**: `/health`, `/v1/pipeline/start`, `/v1/pipeline/status/:id`
+
+**Bindings**: `VETPROOF_PIPELINE` (Workflow), `AI`, `EVIDENCE_INDEX` (Vectorize), `VERIFICATION_CACHE` (KV), `AUDIT_DB` (D1), `PROOF_STORAGE` (R2)
+
+---
+
+### 6. vetproof-consensus (`vetproof-consensus.js`)
+**Type**: Durable Object + Queue Consumer
+
+Stateful BFT consensus coordinator. Each `ShieldConsensus` Durable Object manages a voting session with embedded SQLite for vote storage, quorum tracking, and variance analysis. Also acts as a Queue consumer for async pipeline processing.
+
+| Feature | Detail |
+|---------|--------|
+| BFT consensus | 2/3 supermajority quorum requirement |
+| Variance halt | stdDev > 0.25 triggers Constitutional Halt |
+| Models | 3 Workers AI models (llama-3.1-8b, qwen1.5-14b, bge-base-en-v1.5) |
+| SQLite state | Vote records, session history, evidence cache |
+| Queue consumer | 5-phase pipeline: SANITIZE/GENERATE/VERIFY/DETECT/SIGN |
+| Vectorize | Evidence embedding and semantic search |
+| Proof archival | R2 storage with custom metadata |
+
+**Endpoints**: `/health`, `/v1/consensus/start`, `/v1/consensus/:id/vote`, `/v1/consensus/:id/status`, `/v1/evidence/embed`, `/v1/evidence/search`
+
+**Bindings**: `SHIELD_CONSENSUS` (Durable Object), `AI`, `EVIDENCE_INDEX` (Vectorize), `VETPROOF_QUEUE` (Queue), `VERIFICATION_CACHE` (KV), `AUDIT_DB` (D1), `PROOF_STORAGE` (R2)
+
+---
+
+### 7. sentient-core
+**Type**: Stateless Worker (dashboard-created)
+
+Minimal Workers AI sample deployed via the Cloudflare dashboard. Serves as a health-check endpoint and baseline inference test.
+
+---
+
+## Cloudflare Primitives Used
+
+| Primitive | Binding | Purpose |
+|-----------|---------|---------|
+| **Workers AI** | `AI` | LLM inference (Llama 3.1, Qwen 1.5), embeddings (BGE) |
+| **KV** | `VERIFICATION_CACHE` | Proof cache, pending review queue |
+| **KV** | `RATE_LIMITS` | Per-IP/per-key rate limiting |
+| **KV** | `SESSIONS` | Authentication session storage |
+| **D1** | `AUDIT_DB` | Verification proofs, audit events, rate limit logs |
+| **R2** | `PROOF_STORAGE` | Immutable proof archival with metadata |
+| **Durable Objects** | `PROOF_AGENT` | Stateful agent with SQLite, WebSocket, Alarms |
+| **Durable Objects** | `SHIELD_CONSENSUS` | BFT voting coordinator with SQLite |
+| **Workflows** | `HITL_WORKFLOW` | Durable HITL approval with `waitForEvent()` |
+| **Workflows** | `VETPROOF_PIPELINE` | 6-step durable verification pipeline |
+| **Vectorize** | `EVIDENCE_INDEX` | 768-dim semantic evidence search |
+| **Queues** | `VETPROOF_QUEUE` | Async pipeline stage processing |
+
+---
+
+## Setup
+
+### 1. Install Wrangler
+```bash
+npm install -g wrangler
+wrangler login
+```
+
+### 2. Create Resources
+```bash
+# KV Namespaces
+wrangler kv namespace create VERIFICATION_CACHE
+wrangler kv namespace create RATE_LIMITS
+wrangler kv namespace create SESSIONS
+
+# D1 Database
+wrangler d1 create aevion-verification-audit
+
+# R2 Bucket
+wrangler r2 bucket create evidence-chain
+
+# Vectorize Index
+wrangler vectorize create vetproof-evidence --dimensions 768 --metric cosine
+
+# Queue
+wrangler queues create vetproof-queue
+```
+
+### 3. Configure
+```bash
+cp configs/wrangler.example.toml wrangler.toml
+# Edit wrangler.toml and replace all YOUR_* placeholders
+```
+
+### 4. Set Secrets
+```bash
+wrangler secret put SIGNING_KEY
+wrangler secret put API_SECRET
+```
+
+### 5. Initialize D1 Tables
+```sql
+-- Run via: wrangler d1 execute aevion-verification-audit --command "..."
+
+CREATE TABLE IF NOT EXISTS verification_proofs (
+  id TEXT PRIMARY KEY,
+  claim_id TEXT NOT NULL,
+  proof_hash TEXT NOT NULL,
+  proof_type TEXT NOT NULL,
+  data TEXT,
+  created_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS audit_events (
+  id TEXT PRIMARY KEY,
+  event_type TEXT NOT NULL,
+  claim_id TEXT,
+  data TEXT,
+  created_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS rate_limit_log (
+  id TEXT PRIMARY KEY,
+  key TEXT NOT NULL,
+  action TEXT NOT NULL,
+  created_at TEXT NOT NULL
+);
+
+CREATE INDEX idx_proofs_claim ON verification_proofs(claim_id);
+CREATE INDEX idx_audit_claim ON audit_events(claim_id);
+CREATE INDEX idx_rate_key ON rate_limit_log(key);
+```
+
+### 6. Deploy
+```bash
+# Deploy individual workers (each needs its own wrangler config or --name flag)
+wrangler deploy --name aevion-edge-sheriff
+wrangler deploy --name aevion-ai-sheriff
+wrangler deploy --name aevion-proof-agent
+wrangler deploy --name aevion-vetproof-hitl
+wrangler deploy --name aevion-vetproof-workflow
+wrangler deploy --name aevion-vetproof-consensus
+```
+
+---
+
+## Patent Coverage
+
+These workers implement the following patent claims from US 63/896,282:
+
+| Claim | Description | Worker(s) |
+|-------|-------------|-----------|
+| 3 | Constitutional Halt (confidence threshold gate) | vetproof-hitl, vetproof-workflow, vetproof-consensus |
+| 5 | Weighted multi-model voting | vetproof-consensus, proof-agent |
+| 7 | Accuracy improvement via ensemble | vetproof-consensus |
+| 10 | Hardware root-of-trust verification | edge-sheriff (Ed25519) |
+| 12 | Trust Discrimination Score (TDS) | vetproof-consensus |
+| 79-82 | Multi-verifier formal proof system | vetproof-workflow, vetproof-consensus |
+| 83-84 | Legal reasoning pipeline (38 CFR) | vetproof-hitl, vetproof-workflow |
+
+---
+
+## Cost Estimate
+
+| Tier | Workers | KV | D1 | R2 | AI | Total |
+|------|---------|----|----|----|----|-------|
+| Free | 100K req/day | 100K reads | 5M rows | 10GB | 10K neurons | $0/mo |
+| Paid | 10M req/mo | Unlimited | 25B rows | 10GB free | 10K free | $5/mo |
+| Scale | Unlimited | Unlimited | Unlimited | Pay-per-use | Pay-per-use | ~$25-90/mo |
+
+---
+
+## License
+
+Patent-pending. See US 63/896,282 for protected claims.

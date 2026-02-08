@@ -1,0 +1,168 @@
+# =============================================================================
+# Aevion Shield - Cloudflare Workers Configuration (EXAMPLE)
+# =============================================================================
+#
+# Copy this file to wrangler.toml and replace all YOUR_* placeholders
+# with your actual Cloudflare resource IDs.
+#
+# Prerequisites:
+#   1. Cloudflare account with Workers paid plan ($5/mo)
+#   2. Create KV namespaces:  npx wrangler kv namespace create VERIFICATION_CACHE
+#   3. Create D1 database:    npx wrangler d1 create aevion-verification-audit
+#   4. Create R2 bucket:      npx wrangler r2 bucket create evidence-chain
+#   5. Set secrets:           npx wrangler secret put SIGNING_KEY
+#                             npx wrangler secret put API_SECRET
+#
+# Deploy: npx wrangler deploy
+# =============================================================================
+
+name = "aevion-edge-sheriff"
+main = "workers/edge-sheriff.js"
+compatibility_date = "2024-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Account settings
+account_id = "YOUR_ACCOUNT_ID"
+
+# Environment variables
+[vars]
+ENVIRONMENT = "production"
+API_ORIGIN = "https://api.yourdomain.com"
+COHERENCE_THRESHOLD = "0.85"
+HALT_THRESHOLD = "0.67"
+
+# Workers AI (for edge inference)
+[ai]
+binding = "AI"
+
+# Production environment
+[env.production]
+name = "aevion-edge-sheriff"
+routes = [
+  { pattern = "verify.yourdomain.com/*", zone_id = "YOUR_PRIMARY_ZONE_ID" },
+  { pattern = "api.yourdomain.com/v1/quick-verify", zone_id = "YOUR_PRIMARY_ZONE_ID" },
+  { pattern = "verify.yourdomain2.com/*", zone_id = "YOUR_SECONDARY_ZONE_ID" },
+  { pattern = "api.yourdomain2.com/v1/quick-verify", zone_id = "YOUR_SECONDARY_ZONE_ID" },
+]
+
+[env.production.vars]
+ENVIRONMENT = "production"
+API_ORIGIN = "https://api.yourdomain.com"
+COHERENCE_THRESHOLD = "0.85"
+HALT_THRESHOLD = "0.67"
+
+[env.production.ai]
+binding = "AI"
+
+# ============================================
+# KV NAMESPACES
+# ============================================
+# Create with: npx wrangler kv namespace create <NAME>
+
+[[kv_namespaces]]
+binding = "VERIFICATION_CACHE"
+id = "YOUR_VERIFICATION_CACHE_KV_ID"
+
+[[kv_namespaces]]
+binding = "RATE_LIMITS"
+id = "YOUR_RATE_LIMITS_KV_ID"
+
+[[kv_namespaces]]
+binding = "SESSIONS"
+id = "YOUR_SESSIONS_KV_ID"
+
+[[env.production.kv_namespaces]]
+binding = "VERIFICATION_CACHE"
+id = "YOUR_VERIFICATION_CACHE_KV_ID"
+
+[[env.production.kv_namespaces]]
+binding = "RATE_LIMITS"
+id = "YOUR_RATE_LIMITS_KV_ID"
+
+[[env.production.kv_namespaces]]
+binding = "SESSIONS"
+id = "YOUR_SESSIONS_KV_ID"
+
+# ============================================
+# D1 DATABASE
+# ============================================
+# Create with: npx wrangler d1 create aevion-verification-audit
+# Tables: verification_proofs, audit_events, rate_limit_log
+
+[[d1_databases]]
+binding = "AUDIT_DB"
+database_name = "aevion-verification-audit"
+database_id = "YOUR_D1_DATABASE_ID"
+
+[[env.production.d1_databases]]
+binding = "AUDIT_DB"
+database_name = "aevion-verification-audit"
+database_id = "YOUR_D1_DATABASE_ID"
+
+# ============================================
+# R2 OBJECT STORAGE
+# ============================================
+# Create with: npx wrangler r2 bucket create evidence-chain
+# S3 endpoint: https://YOUR_ACCOUNT_ID.r2.cloudflarestorage.com
+
+[[r2_buckets]]
+binding = "PROOF_STORAGE"
+bucket_name = "evidence-chain"
+
+[[env.production.r2_buckets]]
+binding = "PROOF_STORAGE"
+bucket_name = "evidence-chain"
+
+# ============================================
+# VECTORIZE INDEX (for vetproof-workflow)
+# ============================================
+# Create with: npx wrangler vectorize create vetproof-evidence --dimensions 768 --metric cosine
+# [[vectorize]]
+# binding = "EVIDENCE_INDEX"
+# index_name = "vetproof-evidence"
+
+# ============================================
+# QUEUES (for vetproof-consensus)
+# ============================================
+# Create with: npx wrangler queues create vetproof-queue
+# [[queues.producers]]
+# queue = "vetproof-queue"
+# binding = "VETPROOF_QUEUE"
+#
+# [[queues.consumers]]
+# queue = "vetproof-queue"
+# max_batch_size = 10
+# max_batch_timeout = 30
+
+# ============================================
+# DURABLE OBJECTS (for proof-agent, vetproof-consensus)
+# ============================================
+# [durable_objects]
+# bindings = [
+#   { name = "PROOF_AGENT", class_name = "ProofAgent" },
+#   { name = "SHIELD_CONSENSUS", class_name = "ShieldConsensus" },
+# ]
+#
+# [[migrations]]
+# tag = "v1"
+# new_sqlite_classes = ["ProofAgent", "ShieldConsensus"]
+
+# ============================================
+# WORKFLOWS (for vetproof-hitl, vetproof-workflow)
+# ============================================
+# [[workflows]]
+# name = "vetproof-hitl-workflow"
+# binding = "HITL_WORKFLOW"
+# class_name = "HITLApprovalWorkflow"
+#
+# [[workflows]]
+# name = "vetproof-pipeline"
+# binding = "VETPROOF_PIPELINE"
+# class_name = "VetProofPipeline"
+
+# ============================================
+# Secrets (set via wrangler secret put)
+# ============================================
+# - SIGNING_KEY: Ed25519 private key for proof signing
+# - API_SECRET: Internal API authentication
+# - WEBHOOK_SECRET: Webhook signature verification
