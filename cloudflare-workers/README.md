@@ -1,6 +1,6 @@
 # Aevion Shield - Cloudflare Workers Fleet
 
-Serverless verification infrastructure running on Cloudflare's edge network. Seven specialized Workers form a distributed proof pipeline for cryptographically verifiable AI inference.
+Serverless verification infrastructure running on Cloudflare's edge network. Nine specialized Workers form a distributed proof pipeline with collective intelligence, cross-domain regulation tracking, and cryptographically verifiable AI inference.
 
 **Patent**: US 63/896,282 - Constitutional Halt + Human Oversight
 
@@ -9,29 +9,29 @@ Serverless verification infrastructure running on Cloudflare's edge network. Sev
 ## Architecture Overview
 
 ```
-                     Internet
-                        |
-          +-------------+-------------+
-          |             |             |
-   edge-sheriff    ai-sheriff   sentient-core
-   (Ed25519 +      (Workers AI   (Workers AI
-    Merkle)        inference)     sample)
-          |             |
-          +------+------+
-                 |
-          +------+------+
-          |             |
-     proof-agent   vetproof-hitl
-     (Durable Obj   (Workflow +
-      + x402 pay)    waitForEvent)
-          |             |
-          +------+------+
-                 |
-          +------+------+
-          |             |
-   vetproof-workflow  vetproof-consensus
-   (6-step durable    (BFT Durable Obj
-    pipeline)          + Queue consumer)
+                          Internet
+                             |
+          +------------------+------------------+
+          |                  |                  |
+   edge-sheriff         ai-sheriff        sentient-core
+   (Ed25519 +           (Workers AI        (Workers AI
+    Merkle)              inference)          sample)
+          |                  |
+          +--------+---------+
+                   |
+     +-------------+-------------+
+     |             |             |
+ proof-agent  vetproof-hitl  sentient-collective
+ (Durable Obj  (Workflow +    (Master-agent +
+  + x402 pay)  waitForEvent)  6 verticals +
+     |             |           Quantum Shards)
+     +------+------+             |
+            |              regulation-tracker
+     +------+------+       (Cron: every 6h,
+     |             |        9 reg domains,
+vetproof-workflow  vetproof-consensus  cross-domain
+(6-step durable    (BFT Durable Obj    symbiosis)
+ pipeline)          + Queue consumer)
 ```
 
 ---
@@ -167,6 +167,50 @@ Minimal Workers AI sample deployed via the Cloudflare dashboard. Serves as a hea
 
 ---
 
+### 8. sentient-collective (`sentient-collective.js`)
+**Type**: Cloudflare Workflow (WorkflowEntrypoint) + Vectorize
+
+Master-agent orchestrator implementing the SentientCore Collective Intelligence layer. Routes claims to domain-specialized vertical "slave" agents, extracts anonymized knowledge shards from verified claims, and enables safe cross-domain learning via Vectorize embeddings.
+
+| Feature | Detail |
+|---------|--------|
+| Vertical agents | 6 domains: VetProof, Legal, Finance, Health, Education, Aviation |
+| Per-vertical halt | VetProof 0.67, Legal 0.70, Finance 0.75, Health 0.80, Education 0.65, Aviation 0.85 |
+| Quantum Shard Learning | PII-stripped knowledge fragments embedded in Vectorize |
+| Domain-specific AI | Each vertical gets a tailored system prompt and model |
+| Evidence Chain | SHA-256 proof hashing + R2 archival + D1 audit trail |
+| NIST AI RMF | Compliant architecture with Constitutional Halt |
+
+**Pipeline** (8 durable steps): Route -> Analyze -> Halt Check -> Extract Shards -> Store Shards -> Query Collective -> Audit -> Store Proof
+
+**Endpoints**: `/health`, `/v1/verticals`, `/v1/collective/analyze`, `/v1/collective/status/:id`, `/v1/collective/knowledge`, `/v1/collective/stats`, `/v1/collective/proof/:id`
+
+**Bindings**: `COLLECTIVE_WORKFLOW` (Workflow), `AI`, `VECTORIZE` (Vectorize), `VERIFICATION_CACHE` (KV), `RATE_LIMITS` (KV), `SESSIONS` (KV), `AUDIT_DB` (D1), `PROOF_STORAGE` (R2)
+
+---
+
+### 9. regulation-tracker (`regulation-tracker.js`)
+**Type**: Scheduled (Cron) Worker + Vectorize
+
+Living regulatory database that runs every 6 hours to check for regulatory changes across 9 domains and 6 verticals. Detects cross-domain impacts via a symbiosis map, embeds regulatory knowledge shards into Vectorize, and stores evidence in the proof locker.
+
+| Feature | Detail |
+|---------|--------|
+| Cron schedule | `0 */6 * * *` (every 6 hours) |
+| Regulatory domains | VA 38 CFR, HIPAA 45 CFR, FAA 14 CFR, SOX 17 CFR, FERPA 34 CFR, NIST AI RMF, EU AI Act, MN MCDPA, NIST PQC |
+| Cross-domain symbiosis | 14 rules mapping cascading regulatory impacts |
+| eCFR integration | Polls `ecfr.gov/api/versioner/v1/titles/{title}` for CFR version changes |
+| Workers AI | Analyzes non-CFR sources (NIST, EU, state legislature) |
+| Knowledge embedding | Regulatory shards stored in Vectorize for collective learning |
+
+**Symbiosis examples**: HIPAA change -> impacts Health AND VetProof verticals. NIST AI RMF change -> impacts ALL verticals.
+
+**Endpoints**: `/health`, `/v1/regulations`, `/v1/regulations/symbiosis`, `/v1/regulations/updates`, `/v1/regulations/check`, `/v1/regulations/impacts/:vertical`
+
+**Bindings**: `AI`, `VECTORIZE` (Vectorize), `VERIFICATION_CACHE` (KV), `RATE_LIMITS` (KV), `AUDIT_DB` (D1), `PROOF_STORAGE` (R2)
+
+---
+
 ## Cloudflare Primitives Used
 
 | Primitive | Binding | Purpose |
@@ -183,6 +227,8 @@ Minimal Workers AI sample deployed via the Cloudflare dashboard. Serves as a hea
 | **Workflows** | `VETPROOF_PIPELINE` | 6-step durable verification pipeline |
 | **Vectorize** | `EVIDENCE_INDEX` | 768-dim semantic evidence search |
 | **Queues** | `VETPROOF_QUEUE` | Async pipeline stage processing |
+| **Workflows** | `COLLECTIVE_WORKFLOW` | 8-step collective orchestration pipeline |
+| **Cron Triggers** | `0 */6 * * *` | Scheduled regulation tracking (every 6h) |
 
 ---
 
@@ -268,6 +314,8 @@ wrangler deploy --name aevion-proof-agent
 wrangler deploy --name aevion-vetproof-hitl
 wrangler deploy --name aevion-vetproof-workflow
 wrangler deploy --name aevion-vetproof-consensus
+wrangler deploy --name aevion-sentient-collective
+wrangler deploy --name aevion-regulation-tracker
 ```
 
 ---
@@ -285,6 +333,9 @@ These workers implement the following patent claims from US 63/896,282:
 | 12 | Trust Discrimination Score (TDS) | vetproof-consensus |
 | 79-82 | Multi-verifier formal proof system | vetproof-workflow, vetproof-consensus |
 | 83-84 | Legal reasoning pipeline (38 CFR) | vetproof-hitl, vetproof-workflow |
+| 85+ | Multi-vertical collective intelligence | sentient-collective |
+| 85+ | Cross-domain regulatory symbiosis | regulation-tracker |
+| 85+ | Quantum Shard Learning (anonymized knowledge sharing) | sentient-collective, regulation-tracker |
 
 ---
 

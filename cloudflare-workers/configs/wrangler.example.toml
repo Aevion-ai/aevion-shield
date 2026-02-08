@@ -161,6 +161,20 @@ bucket_name = "evidence-chain"
 # class_name = "VetProofPipeline"
 
 # ============================================
+# WORKFLOWS (for sentient-collective)
+# ============================================
+# [[workflows]]
+# name = "collective-orchestration-workflow"
+# binding = "COLLECTIVE_WORKFLOW"
+# class_name = "CollectiveOrchestrationWorkflow"
+
+# ============================================
+# CRON TRIGGERS (for regulation-tracker)
+# ============================================
+# [triggers]
+# crons = ["0 */6 * * *"]
+
+# ============================================
 # Secrets (set via wrangler secret put)
 # ============================================
 # - SIGNING_KEY: Ed25519 private key for proof signing
